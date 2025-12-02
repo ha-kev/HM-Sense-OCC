@@ -4,8 +4,6 @@ from datetime import datetime
 
 
 class APIClient:
-    """Client for HM SENSE Open Data API"""
-    
     def __init__(self, base_url: str = "https://hm-sense-open-data-api.kube.cs.hm.edu/api") -> None:
         self.base_url = base_url
         self.session = requests.Session()
