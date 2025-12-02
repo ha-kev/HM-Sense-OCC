@@ -1,5 +1,3 @@
-data
-
 # Created by https://www.toptal.com/developers/gitignore/api/macos,visualstudiocode,python,jupyternotebooks
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,visualstudiocode,python,jupyternotebooks
 
@@ -239,3 +237,6 @@ pyrightconfig.json
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,visualstudiocode,python,jupyternotebooks
+
+data/*
+sensor55_feature_vectors.csv
