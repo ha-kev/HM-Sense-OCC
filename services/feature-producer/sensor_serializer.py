@@ -20,6 +20,6 @@ class SensorSerializer:
             payload = payload.encode("utf-8")
         
         raw = zlib.decompress(payload) if self.compress else payload
-        raw_bytes = bytes(raw)
+        raw_bytes: bytes = bytes(raw)
         data = json.loads(raw_bytes.decode("utf-8"))
         return Sensor.model_validate(data)

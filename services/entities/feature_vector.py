@@ -20,25 +20,23 @@ class FeatureVector:
     min_temperature: float
     std_temperature: float
     # CO2
-    avg_co2: float
-    max_co2: float
-    min_co2: float
-    std_co2: float
-    trend_co2: float # rolling mean 60 min
+    avg_co2_60m: float
+    max_co2_60m: float
+    min_co2_60m: float
+    std_co2_60m: float
     residual_co2: float # co2_current - co2_trend
-    delta_5_co2: float # per minute rate (delta_k / (5*k)
-    delta_30_co2: float
-    delta_60_co2: float
+    delta_5m_co2: float # per minute rate (delta_k / (5*k)
+    delta_30m_co2: float
+    delta_60m_co2: float
     # Motion (Timeframe 30 min)
     avg_motion: float
     max_motion: float
     std_motion: float
-    count_motion_2: float # motion count 10 min
-    count_motion_6: float # motion count 30 min
-    recent_motion: int # motion in last 10 min (bool, 1 True, 0 False)
+    count_motion_10m: float
+    count_motion_30m: float
+    recent_motion_10m: int #(bool, 1 True, 0 False)
     # Light
-    max_light: float
-    min_light: float
+    light_level: int # 0, 1, 2, 3 (Splited up on 4 LUX - 2000 LUX)
     daylight_factor: float
     # Time Base
     hour_of_day: int
