@@ -54,3 +54,5 @@ class FeatureVector:
     temperature_humidity: float # temperature x humidity
     motion_off_hours: float # motion x is_off_hours
     light_on_at_night: float # light threshhold x is_night
+    
+    schema_version: int = 1
