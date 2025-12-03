@@ -81,7 +81,7 @@ class Featurizer:
         is_off_hours: int = 1 if hour_of_day < 7 or hour_of_day >= 19 else 0
         is_night: int = 1 if hour_of_day < 6 or hour_of_day >= 22 else 0
         
-        # Season (Northern Hemisphere): 0=Spring, 1=Summer, 2=Autumn, 3=Winter
+        # Season: 0=Spring, 1=Summer, 2=Autumn, 3=Winter
         month = dt.month
         if 3 <= month <= 5:
             season: int = 0
