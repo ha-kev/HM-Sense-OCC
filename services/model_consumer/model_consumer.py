@@ -5,13 +5,15 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.hmm import GaussianHMM
 
 
 class HMMPredictor:
     def __init__(self, model_dir: str | Path = "model") -> None:
         self.model_dir = Path(model_dir)
-        self._scaler = None
-        self._model = None
+        self._scaler: StandardScaler | None = None
+        self._model: GaussianHMM | None = None
         self._state_label_map: Dict[int, str] = {}
         self._state_color_map: Dict[str, Any] = {}
         self._feature_cols: List[str] = []
@@ -41,6 +43,9 @@ class HMMPredictor:
         missing = [col for col in self._feature_cols if col not in feature_vector]
         if missing:
             raise ValueError(f"Missing features for inference: {missing}")
+
+        if self._scaler is None or self._model is None:
+            raise RuntimeError("Model artifacts not loaded.")
 
         ordered_values = np.array([[feature_vector[col] for col in self._feature_cols]])
         scaled = self._scaler.transform(ordered_values)

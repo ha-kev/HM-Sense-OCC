@@ -1,19 +1,43 @@
-from entities.sensor import Sensor
-from entities.feature_vector import FeatureVector
-from sensor_buffer import SensorBuffer
+from collections import defaultdict
+from typing import Dict, List, Sequence
+
+import pandas as pd
+
+from ..entities.sensor import Sensor
+from ..entities.feature_vector import FeatureVector
 from datetime import datetime
 
+
 class Featurizer:
-    def __init__(self, buffer: SensorBuffer) -> None:
-        self.buffer = buffer
-        
-    def extract_features(self, current_sensor: Sensor) -> FeatureVector:
-        df_5 = self.buffer.get_last_n_minutes(5)
-        df_10 = self.buffer.get_last_n_minutes(10)
-        df_30 = self.buffer.get_last_n_minutes(30)
-        df_60 = self.buffer.get_last_n_minutes(60)
-        df_120 = self.buffer.get_last_n_minutes(120)
-        df_180 = self.buffer.get_last_n_minutes(180)
+    def extract_features(self, sensors: Sequence[Sensor]) -> List[FeatureVector]:
+        grouped: Dict[str, List[Sensor]] = defaultdict(list)
+        for sensor in sensors:
+            grouped[sensor.sensor_id].append(sensor)
+
+        feature_vectors: List[FeatureVector] = []
+        for sensor_id, sensor_series in grouped.items():
+            if not sensor_series:
+                continue
+            sensor_series.sort(key=lambda s: s.timestamp)
+            df = pd.DataFrame([s.model_dump() for s in sensor_series])
+            current_sensor = sensor_series[-1]
+            feature_vectors.append(self._build_vector(current_sensor, df))
+        return feature_vectors
+
+    @staticmethod
+    def _window(df: pd.DataFrame, current_ts: int, minutes: int) -> pd.DataFrame:
+        if df.empty:
+            return df
+        cutoff = current_ts - (minutes * 60)
+        return df[df["timestamp"] >= cutoff]
+
+    def _build_vector(self, current_sensor: Sensor, df: pd.DataFrame) -> FeatureVector:
+        df_5 = self._window(df, current_sensor.timestamp, 5)
+        df_10 = self._window(df, current_sensor.timestamp, 10)
+        df_30 = self._window(df, current_sensor.timestamp, 30)
+        df_60 = self._window(df, current_sensor.timestamp, 60)
+        df_120 = self._window(df, current_sensor.timestamp, 120)
+        df_180 = self._window(df, current_sensor.timestamp, 180)
         
         # Direct Values
         humidity: float = current_sensor.humidity or 0.0

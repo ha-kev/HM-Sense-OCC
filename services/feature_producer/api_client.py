@@ -1,18 +1,28 @@
 import requests
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+
+from ..settings import Settings, get_settings
 
 
 class APIClient:
-    def __init__(self, base_url: str = "https://hm-sense-open-data-api.kube.cs.hm.edu/api") -> None:
-        self.base_url = base_url
+    def __init__(
+        self,
+        base_url: Optional[str] = None,
+        request_timeout: Optional[int] = None,
+        default_format: Optional[str] = None,
+        settings: Optional[Settings] = None,
+    ) -> None:
+        self.settings = settings or get_settings()
+        self.base_url = base_url or self.settings.api_base_url
+        self.request_timeout = request_timeout or self.settings.api_request_timeout_seconds
+        self.default_format = default_format or self.settings.default_measurement_format
         self.session = requests.Session()
         self.session.headers.update({"Accept": "application/json"})
     
     def _make_request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         url = f"{self.base_url}{endpoint}"
         try:
-            response = self.session.get(url, params=params, timeout=30)
+            response = self.session.get(url, params=params, timeout=self.request_timeout)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as e:
@@ -31,9 +41,9 @@ class APIClient:
         self, 
         start: int, 
         end: int, 
-        format: str = "json"
+        format: Optional[str] = None
     ) -> Dict[str, Any]:
-        params = {"start": str(start), "end": str(end), "format": format}
+        params = {"start": str(start), "end": str(end), "format": format or self.default_format}
         return self._make_request("/roomclimate/measurements/all", params)
     
     def get_all_measurements_by_type(
@@ -41,9 +51,9 @@ class APIClient:
         sensor_type: str,
         start: int,
         end: int,
-        format: str = "json"
+        format: Optional[str] = None
     ) -> Dict[str, Any]:
-        params = {"start": str(start), "end": str(end), "format": format}
+        params = {"start": str(start), "end": str(end), "format": format or self.default_format}
         return self._make_request(f"/roomclimate/measurements/all/{sensor_type}", params)
     
     def get_sensor_measurements(
@@ -51,9 +61,9 @@ class APIClient:
         sensor_id: str,
         start: Optional[int] = None,
         end: Optional[int] = None,
-        format: str = "json"
+        format: Optional[str] = None
     ) -> Dict[str, Any]:
-        params = {"format": format}
+        params = {"format": format or self.default_format}
         if start is not None:
             params["start"] = str(start)
         if end is not None:
@@ -66,9 +76,9 @@ class APIClient:
         sensor_type: str,
         start: Optional[int] = None,
         end: Optional[int] = None,
-        format: str = "json"
+        format: Optional[str] = None
     ) -> Dict[str, Any]:
-        params = {"format": format}
+        params = {"format": format or self.default_format}
         if start is not None:
             params["start"] = str(start)
         if end is not None:

@@ -1,7 +1,7 @@
 import json
 import zlib
 from typing import Union
-from entities.sensor import Sensor
+from ..entities.sensor import Sensor
 
 class SensorSerializer:
     def __init__(self, compress: bool = False):

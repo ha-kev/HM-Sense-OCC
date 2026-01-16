@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments and Python caches
+.venv/
+.env
+.env.*
+
+# IDE / Editor directories
+.vscode/
+.idea/
+
+# Git and CI artifacts
+.git/
+.gitignore
+
+# Data / local artifacts not needed in image
+data/
+db/
+images/
+model/
+model_generator.ipynb
+df_transformer.ipynb
+eda_sensor.ipynb
+
+# OS files
+.DS_Store
