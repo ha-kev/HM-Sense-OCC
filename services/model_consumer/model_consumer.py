@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from sklearn.hmm import GaussianHMM
+from hmmlearn.hmm import GaussianHMM
 
 
 class HMMPredictor:

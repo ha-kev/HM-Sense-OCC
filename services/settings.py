@@ -28,6 +28,15 @@ class Settings(BaseSettings):
         "json",
         description="Format parameter forwarded to the HM Sense API",
     )
+    feature_endpoint_base_url: str = Field(
+        "http://0.0.0.0:8000/api",
+        description="Base URL for the local feature endpoint API",
+    )
+    feature_endpoint_timeout_seconds: int = Field(
+        10,
+        ge=1,
+        description="HTTP timeout in seconds for feature endpoint calls",
+    )
 
     class Config:
         env_file = ".env"

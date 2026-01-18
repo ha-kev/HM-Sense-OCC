@@ -1,86 +1,80 @@
 # HMM Sense OCC
 
-## Projektübersicht
+## Projektüberblick
 
-### Forschungsfrage:
-Wie lässt sich die Raumbelegung durch CO2-, Bewegungs-, Licht-, Temperatur und Feuchtigkeitssensoren
+HMM Sense OCC ist eine Pipeline zur Abschätzung der Raumbelegung an der Hochschule München. Rohdaten aus der HM-Sense-API (CO2, Bewegung, Licht, Temperatur, Feuchtigkeit) werden zu Feature-Vektoren verarbeitet, mit einem Gaussian-HMM interpretiert und über FastAPI-Endpunkte bereitgestellt. Die Architektur trennt Feature-Erzeugung und Modellinferenz in zwei eigenständige Services, die sich per REST austauschen und in Docker oder Kubernetes betrieben werden können.
 
-### Ziel:
-- Prognose der prozentualen Raumbelegung inklusiver Wahrscheinlichkeiten
-- Visualisierung der Treiber
-- Bereitstellung über einen Service-Endpoint
+## Funktionen
 
-### Erfolgskriterium:
-- mindestens eine binäre Klassifikation der Belegung (leer/voll) im 5 Minuten Takt
-- Realistischer Mehrwert für Studierende bei der Raumsuche
+- Automatisierter Abruf der HM-Sense-Daten inklusive Zeitfenster- und Formatparametern
+- Feature-Engineering (Glättung, Fenstern, Normalisierung) mit Ausgabe als JSON Feature-Vektoren
+- GaussianHMM-basierte Zustandsklassifikation mit Wahrscheinlichkeiten und Sensor-Snapshots
+- FastAPI-Endpoints `/api/features` und `/api/predictions` samt Healthchecks
+- Bereitgestellte Dockerfiles und Kubernetes-Manifeste (Deployments, Services, HPAs)
 
-## Recherche & Konzepte
+## Voraussetzungen
 
-### Bestehende Lösung
-- [Energy and Buildings, 2015](https://doi.org/10.1016/j.enbuild.2015.11.071)
-- [Indoor Occupancy Detection, 2024](https://www.researchgate.net/publication/391306996_Indoor_Occupancy_Detection_Using_Machine_Learning_and_Environmental_Sensors)
+- Python 3.12 und `pip`
+- Ein UNIX-kompatibles Terminal (getestet auf macOS/Linux)
+- Optional: Docker 24+ zum Container-Build sowie `kubectl` + Kubernetes-Cluster für Deployments
 
-Die aufgelisteten Lösungen setzen auf gelabelte Datensätze, da unsere Sensorhistorie jedoch keine verlässlichen Labels oder Validierungsszenarien bietet, verfolgen wir einen vollständig unsupervised Ansatz.
+## Installation
 
-## Datenquellen & Exploration
+1. Repository beziehen und wechseln:
+	```bash
+	git clone <REPO_URL>
+	cd hm-sense-pipeline
+	```
+2. Virtuelle Umgebung anlegen und aktivieren:
+	```bash
+	python -m venv .venv
+	source .venv/bin/activate  # Windows: .venv\Scripts\activate
+	```
+3. Abhängigkeiten installieren:
+	```bash
+	pip install -r services/feature_producer/requirements.txt
+	pip install -r services/model_consumer/requirements.txt
+	```
 
-### HM-Sense API
-- [API der Hochschule München](https://hm-sense-open-data-api.kube.cs.hm.edu/)
-- Rohdaten Umweltsensoren (CO2, Bewegungs, Licht, Temperatur und Feuchtigkeit)
+## Konfiguration
 
-### Exploration
-Die Datenexploration (siehe [Exploration der Daten](eda_sensor.ipynb)) fokussiert sich auf den Sensor 55 und deckt den Zeitraum 2025‑10‑01 bis 2025‑11‑01 ab. Nach Grundstatistiken und Zeitindexierung werden Ausreißer per Z‑Score entfernt, um saubere Trends für CO2, Bewegung, Licht, Temperatur und Feuchtigkeit zu erhalten. Korrelations‑Heatmaps, Histogramme und Wochen‑Slices legen typische Tagesverläufe sowie Wechselwirkungen zwischen Umweltgrößen offen, während differenzierte Reihen und Motion/CO2‑Overlays Hinweise auf potenzielle Belegungsmuster liefern.
+1. [.env.example](.env.example) nach `.env` kopieren.
+2. Die Werte mit dem Präfix `FEATURE_PRODUCER_` anpassen (API-URL, Zeitfenster, interne Service-URL, Timeouts).
+3. Beide Services laden die Einstellungen zentral über [services/settings.py](services/settings.py); in Docker/Kubernetes werden dieselben Variablen als Environment bereitgestellt (z. B. via ConfigMap oder Secret).
 
+## Nutzung
 
-![HM Sense Datensatz](images/eda/hum-temp-co2-week.png)
+### Feature-Producer starten
+```bash
+uvicorn services.feature_producer.app:app --reload
+```
+Standard-Endpunkte:
+- http://localhost:8000/health
+- http://localhost:8000/api/features
 
-## Modellversuch
+### Model-Consumer starten
+```bash
+python -m uvicorn services.model_consumer.app:app --host 0.0.0.0 --port 8002
+```
+Standard-Endpunkte:
+- http://localhost:8002/health
+- http://localhost:8002/api/predictions
 
-Das Modell ist ein vollständig unsupervised Setup mit GaussianHMM. Nach Feature-Engineering werden alle Merkmale skaliert und per Grid Search die Zahl latenter Zustände bestimmt.
+Der Model-Consumer verwendet `FEATURE_PRODUCER_FEATURE_ENDPOINT_BASE_URL`, um den Feature-Producer zu erreichen. Für Docker- oder Kubernetes-Setups muss hier die interne Service-URL (z. B. `http://feature-producer:8000/api`) gesetzt werden.
 
-Die rohen Zustände werden anschließend zeitlich geglättet, nach sensorischen Profilen sortiert und interpretiert.
+### Container-Build (optional)
+```bash
+docker build -f services/feature_producer/Dockerfile -t feature-producer .
+docker build -f services/model_consumer/Dockerfile -t model-consumer .
+```
 
-State-Raster, PCA Projektion, sowie CO2/Motion-Overlays zeigen, dass die Zustände robuste Tagesmuster erfassen.
-
-![PC Embeddings](images/model/Fig3.png)
-
-![Motion x Residual CO2](images/model/Fig7.png)
-
-![HMM Prediction](images/model/Fig9.png)
-
-## Pipeline & Service Architecture
-
-![Service Architecture](images/pipeline/service_architecture.png)
-
-
-Ein modularer Aufbau trennt Feature-Erzeugung, Modellinferenz, API-Zugriff und Persistenz, während Kafka als Event-Layer fungiert.
-
-### Feature-Engineering-Pod
-- Datenabruf (Polling Sensor API)  
-- Datenbereinigung  
-- Feature Engineering  
-- Export der Feature-Vektoren  
-- Ablage im Feature Storage
-
-### Model-Pod
-- Konsum der Feature-Vektoren (Batch oder Realtime)  
-- HMM-Inferenz der Raumbelegung  
-- Persistenz im Prediction Storage
-
-### API-Pods
-- Abruf der Predictions aus Storage oder Model-Pod  
-- Einheitliche Schnittstelle für UI/App  
-- Optional Authentifizierung und Rate-Limiting
-
-### Storage-Pods
-- Speicherung von Feature- und Prediction-Vektoren  
-- Bereitstellung historischer Daten
-
-### Kommunikation
-- Eventstreaming über Kafka für lose Kopplung und Skalierung
-
-## Ausblick
-
-- Dashboard mit Plotly Dash/Streamlit
-- Erstellen von Ground Truth Daten mit Hilfe von Stundeplänen
-- Rest-Service für Echtzeit-State-Abfragen
+### Kubernetes-Deployment (optional)
+1. Container-Images pushen und Tags in `deploy/k8s/*.yaml` eintragen.
+2. Ressourcen anwenden:
+	```bash
+	kubectl apply -f deploy/k8s/namespace.yaml
+	kubectl apply -f deploy/k8s/configmap.yaml
+	kubectl apply -f deploy/k8s/feature-producer-deployment.yaml
+	kubectl apply -f deploy/k8s/model-consumer-deployment.yaml
+	```
+3. Die bereitgestellten Services und HorizontalPodAutoscaler ermöglichen eine skalierbare Ausführung auf dem Cluster.

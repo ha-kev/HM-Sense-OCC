@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feature-producer
+  namespace: hm-sense
+  labels:
+    app: feature-producer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: feature-producer
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: feature-producer
+    spec:
+      containers:
+        - name: feature-producer
+          image: ghcr.io/your-org/feature-producer:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: hm-sense-config
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feature-producer
+  namespace: hm-sense
+  labels:
+    app: feature-producer
+spec:
+  selector:
+    app: feature-producer
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List, Sequence
+from typing import Any, Dict, List, Sequence
 
 import pandas as pd
 
@@ -19,10 +19,17 @@ class Featurizer:
             if not sensor_series:
                 continue
             sensor_series.sort(key=lambda s: s.timestamp)
-            df = pd.DataFrame([s.model_dump() for s in sensor_series])
+            df = pd.DataFrame([self._sensor_to_dict(s) for s in sensor_series])
             current_sensor = sensor_series[-1]
             feature_vectors.append(self._build_vector(current_sensor, df))
         return feature_vectors
+
+    @staticmethod
+    def _sensor_to_dict(sensor: Sensor) -> Dict[str, Any]:
+        dump = getattr(sensor, "model_dump", None)
+        if callable(dump):
+            return dump()
+        return sensor.dict()
 
     @staticmethod
     def _window(df: pd.DataFrame, current_ts: int, minutes: int) -> pd.DataFrame:

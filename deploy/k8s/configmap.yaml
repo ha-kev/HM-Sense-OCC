@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hm-sense-config
+  namespace: hm-sense
+  labels:
+    app.kubernetes.io/name: hm-sense
+    app.kubernetes.io/component: config
+  annotations:
+    reloader.stakater.com/match: "true"
+data:
+  FEATURE_PRODUCER_API_BASE_URL: https://hm-sense-open-data-api.kube.cs.hm.edu/api
+  FEATURE_PRODUCER_API_REQUEST_TIMEOUT_SECONDS: "30"
+  FEATURE_PRODUCER_DEFAULT_TIME_WINDOW_HOURS: "3"
+  FEATURE_PRODUCER_DEFAULT_MEASUREMENT_FORMAT: json
+  FEATURE_PRODUCER_FEATURE_ENDPOINT_TIMEOUT_SECONDS: "10"
