@@ -68,6 +68,15 @@ docker build -f services/feature_producer/Dockerfile -t feature-producer .
 docker build -f services/model_consumer/Dockerfile -t model-consumer .
 ```
 
+### Docker Compose (recommended for local testing)
+1. Kopiere `.env.example` nach `.env` und passe die Werte an.
+2. Starte beide Services zusammen:
+	```bash
+	docker compose up --build
+	```
+3. Die Dienste sind anschließend unter http://localhost:8001 (Feature-Producer) und http://localhost:8002 (Model-Consumer) erreichbar.
+4. Zum Stoppen und Aufräumen `docker compose down` ausführen (ggf. mit `-v` für Volumes).
+
 ### Kubernetes-Deployment (optional)
 1. Container-Images pushen und Tags in `deploy/k8s/*.yaml` eintragen.
 2. Ressourcen anwenden:
