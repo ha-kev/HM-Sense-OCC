@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  feature-producer:
+    build:
+      context: .
+      dockerfile: services/feature_producer/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  model-consumer:
+    build:
+      context: .
+      dockerfile: services/model_consumer/Dockerfile
+    env_file:
+      - .env
+    environment:
+      FEATURE_PRODUCER_FEATURE_ENDPOINT_BASE_URL: ${FEATURE_PRODUCER_FEATURE_ENDPOINT_BASE_URL:-http://feature-producer:8000/api}
+    ports:
+      - "8002:8002"
+    depends_on:
+      feature-producer:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

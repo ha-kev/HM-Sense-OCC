@@ -20,7 +20,6 @@ __pycache__/
 data/
 db/
 images/
-model/
 model_generator.ipynb
 df_transformer.ipynb
 eda_sensor.ipynb

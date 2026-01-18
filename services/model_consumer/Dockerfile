@@ -15,6 +15,7 @@ COPY services/model_consumer/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY services ./services
+COPY model ./model
 
 ENV FEATURE_PRODUCER_FEATURE_ENDPOINT_BASE_URL=http://feature-producer:8000/api
 
