@@ -50,7 +50,7 @@ services:
       - "traefik.http.routers.hm-occ-pred.entrypoints=https"
       - "traefik.http.routers.hm-occ-pred.tls=true"
       - "traefik.http.services.hm-occ-pred.loadbalancer.server.port=8002"
-      - "traefik.http.middlewares.pred-strip.stripprefix.prefixes=/api/predictions"
+      - "traefik.http.middlewares.pred-strip.stripprefix.prefixes=/api"
       - "traefik.http.routers.hm-occ-pred.middlewares=pred-strip"
       - "traefik.docker.network=traefik"
 

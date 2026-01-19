@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.info("Starting HM Sense Prediction Service with log level: %s", settings.log_level)
 
 app = FastAPI(title="HM Sense Prediction Service")
-app.include_router(prediction_router, prefix="/api")
+app.include_router(prediction_router)
 
 
 @app.get("/health")
