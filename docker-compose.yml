@@ -1,5 +1,6 @@
 services:
   feature-producer:
+    container_name: hm-occ-feature
     build:
       context: .
       dockerfile: services/feature_producer/Dockerfile
@@ -21,6 +22,7 @@ services:
           - feature-producer
 
   model-consumer:
+    container_name: hm-occ-predict
     build:
       context: .
       dockerfile: services/model_consumer/Dockerfile
