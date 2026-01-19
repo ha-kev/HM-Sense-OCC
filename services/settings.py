@@ -37,6 +37,10 @@ class Settings(BaseSettings):
         ge=1,
         description="HTTP timeout in seconds for feature endpoint calls",
     )
+    log_level: str = Field(
+        "INFO",
+        description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
+    )
 
     class Config:
         env_file = ".env"
